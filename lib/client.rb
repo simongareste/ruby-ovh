@@ -40,28 +40,61 @@ module OVH
       resp
     end
 
+    # Generate signature
+    #
+    # @param url [String]
+    # @param method [String]
+    # @param timestamp [String]
+    # @param body [String]
+    #
+    def get_signature(url, method, timestamp, body = "")
+      signature = "$1$#{Digest::SHA1.hexdigest("#{application_secret}+#{consumer_key}+#{method}+https://api.ovh.com/1.0#{url}+#{body}+#{timestamp}")}"
+    end
+
     # Make a get request to the OVH api
     #
     # @param url [String]
     # @return [Net::HTTPResponse] response
     def get(url)
-      uri = ::URI.parse('https://eu.api.ovh.com')
+      uri = ::URI.parse('https://api.ovh.com')
       http = ::Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
 
       timestamp = Time.now.to_i
-      signature = "$1$#{Digest::SHA1.hexdigest("#{application_secret}+#{consumer_key}+GET+https://eu.api.ovh.com/1.0#{url}++#{timestamp}")}"
 
       headers = {
         'X-Ovh-Application' => application_key,
         'X-Ovh-Timestamp'   => timestamp.to_s,
-        'X-Ovh-Signature'   => signature,
+        'X-Ovh-Signature'   => get_signature(url, "GET", timestamp.to_s),
         'x-Ovh-Consumer'    => consumer_key
       }
 
       http.get("/1.0#{url}", headers)
     end
 
+    # Make a post request to the OVH api
+    #
+    # @param url [String]
+    # @param body [String]
+    # @return [Net::HTTPResponse] response
+    def post(url, body)
+      uri = ::URI.parse('https://api.ovh.com')
+      http = ::Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
 
+      timestamp = Time.now.to_i
+
+      headers = {
+        'Host'              => 'api.ovh.com',
+        'Accept'            => 'application/json',
+        'Content-Type'      => 'application/json',
+        'X-Ovh-Application' => application_key,
+        'X-Ovh-Timestamp'   => timestamp.to_s,
+        'X-Ovh-Signature'   => get_signature(url, "POST", timestamp.to_s, body),
+        'x-Ovh-Consumer'    => consumer_key
+      }
+
+      http.post("/1.0#{url}", body, headers)
+    end
   end
 end
