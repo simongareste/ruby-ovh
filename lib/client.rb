@@ -9,7 +9,7 @@ module OVH
   # Main class
   class Client
 
-
+    HOST = 'api.ovh.com'
     attr_reader :application_key, :application_secret, :consumer_key
 
     def initialize(application_key: nil, application_secret: nil, consumer_key: nil)
@@ -25,7 +25,7 @@ module OVH
     # @param [Hash] access_rules
     # @return [Hash] the JSON response
     def request_consumerkey(access_rules)
-      uri = ::URI.parse('https://eu.api.ovh.com')
+      uri = ::URI.parse("https://#{HOST}")
       http = ::Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
 
@@ -48,7 +48,7 @@ module OVH
     # @param body [String]
     #
     def get_signature(url, method, timestamp, body = "")
-      signature = "$1$#{Digest::SHA1.hexdigest("#{application_secret}+#{consumer_key}+#{method}+https://api.ovh.com/1.0#{url}+#{body}+#{timestamp}")}"
+      signature = "$1$#{Digest::SHA1.hexdigest("#{application_secret}+#{consumer_key}+#{method}+https://#{HOST}/1.0#{url}+#{body}+#{timestamp}")}"
     end
 
     # Make a get request to the OVH api
@@ -56,7 +56,7 @@ module OVH
     # @param url [String]
     # @return [Net::HTTPResponse] response
     def get(url)
-      uri = ::URI.parse('https://api.ovh.com')
+      uri = ::URI.parse("https://#{HOST}")
       http = ::Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
 
@@ -78,14 +78,14 @@ module OVH
     # @param body [String]
     # @return [Net::HTTPResponse] response
     def post(url, body)
-      uri = ::URI.parse('https://api.ovh.com')
+      uri = ::URI.parse("https://#{HOST}")
       http = ::Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
 
       timestamp = Time.now.to_i
 
       headers = {
-        'Host'              => 'api.ovh.com',
+        'Host'              => HOST,
         'Accept'            => 'application/json',
         'Content-Type'      => 'application/json',
         'X-Ovh-Application' => application_key,
