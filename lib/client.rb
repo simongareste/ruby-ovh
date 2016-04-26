@@ -56,20 +56,9 @@ module OVH
     # @param url [String]
     # @return [Net::HTTPResponse] response
     def get(url)
-      uri = ::URI.parse("https://#{HOST}")
-      http = ::Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
 
-      timestamp = Time.now.to_i
+      request(url, 'GET', '')
 
-      headers = {
-        'X-Ovh-Application' => application_key,
-        'X-Ovh-Timestamp'   => timestamp.to_s,
-        'X-Ovh-Signature'   => get_signature(url, "GET", timestamp.to_s),
-        'x-Ovh-Consumer'    => consumer_key
-      }
-
-      http.get("/1.0#{url}", headers)
     end
 
     # Make a post request to the OVH api
@@ -78,23 +67,9 @@ module OVH
     # @param body [String]
     # @return [Net::HTTPResponse] response
     def post(url, body)
-      uri = ::URI.parse("https://#{HOST}")
-      http = ::Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
 
-      timestamp = Time.now.to_i
+      request(url, 'POST', body)
 
-      headers = {
-        'Host'              => HOST,
-        'Accept'            => 'application/json',
-        'Content-Type'      => 'application/json',
-        'X-Ovh-Application' => application_key,
-        'X-Ovh-Timestamp'   => timestamp.to_s,
-        'X-Ovh-Signature'   => get_signature(url, "POST", timestamp.to_s, body),
-        'x-Ovh-Consumer'    => consumer_key
-      }
-
-      http.post("/1.0#{url}", body, headers)
     end
 
     # Make a put request to the OVH api
@@ -104,6 +79,22 @@ module OVH
     # @return [Net::HTTPResponse] response
     def put(url, body)
 
+      request(url, 'PUT', body)
+    end
+
+
+    # Make a delete request to the OVH api
+    #
+    # @param url [String]
+    # @return [Net::HTTPResponse] response
+    def delete(url)
+
+      request(url, 'DELETE', '')
+
+    end
+
+    def request(url, method, body)
+
       uri = ::URI.parse("https://#{HOST}")
       http = ::Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
@@ -116,11 +107,11 @@ module OVH
         'Content-Type'      => 'application/json',
         'X-Ovh-Application' => application_key,
         'X-Ovh-Timestamp'   => timestamp.to_s,
-        'X-Ovh-Signature'   => get_signature(url, "PUT", timestamp.to_s, body),
+        'X-Ovh-Signature'   => get_signature(url, method, timestamp.to_s, body),
         'x-Ovh-Consumer'    => consumer_key
       }
 
-      http.send_request('PUT', "/1.0#{url}", body, headers)
+      http.send_request(method, "/1.0#{url}", body, headers)
     end
   end
 end
