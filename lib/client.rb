@@ -96,5 +96,31 @@ module OVH
 
       http.post("/1.0#{url}", body, headers)
     end
+
+    # Make a put request to the OVH api
+    #
+    # @param url [String]
+    # @param body [String]
+    # @return [Net::HTTPResponse] response
+    def put(url, body)
+
+      uri = ::URI.parse("https://#{HOST}")
+      http = ::Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+
+      timestamp = Time.now.to_i
+
+      headers = {
+        'Host'              => HOST,
+        'Accept'            => 'application/json',
+        'Content-Type'      => 'application/json',
+        'X-Ovh-Application' => application_key,
+        'X-Ovh-Timestamp'   => timestamp.to_s,
+        'X-Ovh-Signature'   => get_signature(url, "PUT", timestamp.to_s, body),
+        'x-Ovh-Consumer'    => consumer_key
+      }
+
+      http.send_request('PUT', "/1.0#{url}", body, headers)
+    end
   end
 end
