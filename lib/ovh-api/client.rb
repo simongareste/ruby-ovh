@@ -5,7 +5,7 @@ require 'yaml'
 require 'digest/sha1'
 
 # Main module
-module OVH
+module OVHApi
   # Main class
   class Client
 
@@ -49,6 +49,7 @@ module OVH
     #
     def get_signature(url, method, timestamp, body = "")
       signature = "$1$#{Digest::SHA1.hexdigest("#{application_secret}+#{consumer_key}+#{method}+https://#{HOST}/1.0#{url}+#{body}+#{timestamp}")}"
+      signature
     end
 
     # Make a get request to the OVH api
