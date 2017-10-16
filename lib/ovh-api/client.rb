@@ -9,7 +9,7 @@ module OVHApi
   # Main class
   class Client
 
-    HOST = 'api.ovh.com'
+    HOST = 'eu.api.ovh.com'
     attr_reader :application_key, :application_secret, :consumer_key
 
     def initialize(application_key: nil, application_secret: nil, consumer_key: nil)
