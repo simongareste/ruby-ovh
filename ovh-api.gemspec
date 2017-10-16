@@ -23,8 +23,8 @@ Gem::Specification.new do |s|
 
   s.has_rdoc      = 'yard'
 
-  s.add_development_dependency 'cucumber', '~> 2.0.2'
-  s.add_development_dependency 'webmock', '~> 1.21.0'
-  s.add_development_dependency 'rspec', '~> 3.3.0'
+  s.add_development_dependency 'cucumber', '~> 2.0', '>= 2.0.2'
+  s.add_development_dependency 'webmock', '~> 1.21'
+  s.add_development_dependency 'rspec', '~> 3.3'
 
 end
