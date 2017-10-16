@@ -5,19 +5,29 @@ require 'yaml'
 require 'digest/sha1'
 
 # Main module
-module OVH
+module OVHApi
   # Main class
   class Client
 
-    HOST = 'api.ovh.com'
+    HOST = 'eu.api.ovh.com'
     attr_reader :application_key, :application_secret, :consumer_key
 
     def initialize(application_key: nil, application_secret: nil, consumer_key: nil)
-      conf = YAML.load_file('conf.yml')
+      begin
+        conf = YAML.load_file('config/ovh-api.yml')
+        @application_key    = application_key || conf['application_key']
+        @application_secret = application_secret || conf['application_secret']
+        @consumer_key       = consumer_key || conf['consumer_key']
+      rescue SystemCallError
+      end
 
-      @application_key    = application_key || conf['application_key']
-      @application_secret = application_secret || conf['application_secret']
-      @consumer_key       = consumer_key || conf['consumer_key']
+      @application_key    = application_key
+      @application_secret = application_secret
+      @consumer_key       = consumer_key
+
+      raise OVHApiNotConfiguredError.new(
+        "Either instantiate Client.new with application_key and application_secret, or create a YAML file in config/ovh-api.yml with those values set") if @application_key.nil? || @application_secret.nil?
+
     end
 
     # Request a consumer key
@@ -35,9 +45,14 @@ module OVH
       }
 
       resp = http.post('/1.0/auth/credential', access_rules.to_json, headers)
-      @consumer_key = JSON.parse(resp.body)['consumerKey']
+      begin
+        body_hash = JSON.parse(resp.body)
+        @consumer_key = body_hash['consumerKey']
 
-      resp
+        return resp, body_hash["validationUrl"]
+      rescue JSON::ParserError
+        return resp
+      end
     end
 
     # Generate signature
@@ -49,6 +64,7 @@ module OVH
     #
     def get_signature(url, method, timestamp, body = "")
       signature = "$1$#{Digest::SHA1.hexdigest("#{application_secret}+#{consumer_key}+#{method}+https://#{HOST}/1.0#{url}+#{body}+#{timestamp}")}"
+      signature
     end
 
     # Make a get request to the OVH api
@@ -94,6 +110,9 @@ module OVH
     end
 
     def request(url, method, body)
+
+      raise OVHApiNotConfiguredError.new(
+        "You cannot call Client#request without a consumer_key, please use the Client#request_consumerkey method to get one, and validate it with you credential by following the link, and/or save the consumer_key value in the YAML file in config/ovh-api.yml") if @consumer_key.nil?
 
       uri = ::URI.parse("https://#{HOST}")
       http = ::Net::HTTP.new(uri.host, uri.port)

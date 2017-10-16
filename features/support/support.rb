@@ -1,3 +1,3 @@
 require 'webmock/cucumber'
-require_relative '../../lib/client'
+require 'ovh-api'
 require 'cucumber/rspec/doubles'
