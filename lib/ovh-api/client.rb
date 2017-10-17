@@ -14,20 +14,18 @@ module OVHApi
 
     def initialize(application_key: nil, application_secret: nil, consumer_key: nil)
       begin
-        conf = YAML.load_file('config/ovh-api.yml')
+        conf = YAML.load_file('./config/ovh-api.yml')
         @application_key    = application_key || conf['application_key']
         @application_secret = application_secret || conf['application_secret']
         @consumer_key       = consumer_key || conf['consumer_key']
       rescue SystemCallError
+        @application_key    = application_key
+        @application_secret = application_secret
+        @consumer_key       = consumer_key
       end
-
-      @application_key    = application_key
-      @application_secret = application_secret
-      @consumer_key       = consumer_key
 
       raise OVHApiNotConfiguredError.new(
         "Either instantiate Client.new with application_key and application_secret, or create a YAML file in config/ovh-api.yml with those values set") if @application_key.nil? || @application_secret.nil?
-
     end
 
     # Request a consumer key
