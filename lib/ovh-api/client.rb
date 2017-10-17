@@ -65,6 +65,32 @@ module OVHApi
       signature
     end
 
+
+    # Helper to make a request to the OVH api then return the body as parsed JSON tree
+    #
+    # If body cannot be parsed, error is rescued and :body is set to nil.
+    #
+    # This function raise OVHApiNotImplementedError if method is not valid
+    #
+    # @param method [Symbol]: :get, :post, :put, :delete
+    # @param url [String]
+    # @return [Hash] { :resp => [Net::HTTPResponse] response, :body => [Hash|NilClass] (:resp body JSON parsed)  }
+    def request_json(method, url)
+      raise OVHApiNotImplementedError.new(
+        "#{method.to_s} is not implemented. Please refere to documentation."
+      ) unless [:get, :post, :delete, :put].include?method
+      resp = self.public_send(method, url)
+      body = nil
+      begin
+        body = JSON.parse(resp.body)
+      rescue
+      end
+      return {
+        :resp => resp,
+        :body => body
+      }
+    end
+
     # Make a get request to the OVH api
     #
     # @param url [String]
