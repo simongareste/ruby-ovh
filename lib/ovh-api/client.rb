@@ -73,13 +73,21 @@ module OVHApi
     # This function raise OVHApiNotImplementedError if method is not valid
     #
     # @param method [Symbol]: :get, :post, :put, :delete
-    # @param url [String]
+    # @param path [String]
+    # @param arguments: [Hash]: will be encoded to be URL friendly with URI.encode_www_form and then pass as URL parameters
+    # @param body [String]: function parameters to be JSONified and sent as body in the request
     # @return [Hash] { :resp => [Net::HTTPResponse] response, :body => [Hash|NilClass] (:resp body JSON parsed)  }
-    def request_json(method, url)
+    def request_json(method, path, arguments = nil, body = '')
       raise OVHApiNotImplementedError.new(
         "#{method.to_s} is not implemented. Please refere to documentation."
       ) unless [:get, :post, :delete, :put].include?method
-      resp = self.public_send(method, url)
+      method_str = method.to_s.upcase
+      if arguments.nil? then
+        url = path
+      else
+        url = "#{path}?#{URI.encode_www_form(arguments)}"
+      end
+      resp = request(url, method_str, body)
       body = nil
       begin
         body = JSON.parse(resp.body)
