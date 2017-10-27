@@ -9,19 +9,20 @@ module OVHApi
   # Main class
   class Client
 
-    HOST = 'eu.api.ovh.com'
-    attr_reader :application_key, :application_secret, :consumer_key
+    attr_reader :application_key, :application_secret, :consumer_key, :host
 
-    def initialize(application_key: nil, application_secret: nil, consumer_key: nil)
+    def initialize(application_key: nil, application_secret: nil, consumer_key: nil, host: 'eu.api.ovh.com')
       begin
         conf = YAML.load_file('./config/ovh-api.yml')
         @application_key    = application_key || conf['application_key']
         @application_secret = application_secret || conf['application_secret']
-        @consumer_key       = consumer_key || conf['consumer_key']
+        @consumer_key       = consumer_key || conf['consumer_key'] 
+        @host               = host || conf['host']
       rescue SystemCallError
         @application_key    = application_key
         @application_secret = application_secret
         @consumer_key       = consumer_key
+        @host               = host
       end
 
       raise OVHApiNotConfiguredError.new(
@@ -33,7 +34,7 @@ module OVHApi
     # @param [Hash] access_rules
     # @return [Hash] the JSON response
     def request_consumerkey(access_rules)
-      uri = ::URI.parse("https://#{HOST}")
+      uri = ::URI.parse("https://#{@host}")
       http = ::Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
 
@@ -61,7 +62,7 @@ module OVHApi
     # @param body [String]
     #
     def get_signature(url, method, timestamp, body = "")
-      signature = "$1$#{Digest::SHA1.hexdigest("#{application_secret}+#{consumer_key}+#{method}+https://#{HOST}/1.0#{url}+#{body}+#{timestamp}")}"
+      signature = "$1$#{Digest::SHA1.hexdigest("#{application_secret}+#{consumer_key}+#{method}+https://#{@host}/1.0#{url}+#{body}+#{timestamp}")}"
       signature
     end
 
@@ -146,14 +147,14 @@ module OVHApi
       raise OVHApiNotConfiguredError.new(
         "You cannot call Client#request without a consumer_key, please use the Client#request_consumerkey method to get one, and validate it with you credential by following the link, and/or save the consumer_key value in the YAML file in config/ovh-api.yml") if @consumer_key.nil?
 
-      uri = ::URI.parse("https://#{HOST}")
+      uri = ::URI.parse("https://#{@host}")
       http = ::Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
 
       timestamp = Time.now.to_i
 
       headers = {
-        'Host'              => HOST,
+        'Host'              => @host,
         'Accept'            => 'application/json',
         'Content-Type'      => 'application/json',
         'X-Ovh-Application' => application_key,
